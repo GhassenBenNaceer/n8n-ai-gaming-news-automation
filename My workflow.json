@@ -1,0 +1,199 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "12ac370e-1ee0-4251-9528-c6e05095d509",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://me.ign.com/en/amazon-deals",
+        "customHeaders": {
+          "headers": [
+            {}
+          ]
+        },
+        "customCookies": {
+          "cookies": [
+            {}
+          ]
+        }
+      },
+      "type": "@nskha/n8n-nodes-scrappey.scrappey",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "5e45831e-c604-4726-89d4-0e45e5d971f0",
+      "name": "scrappey",
+      "credentials": {
+        "scrappeyApi": {
+          "id": "fsOBGnlFRVejdOpd",
+          "name": "Scrappey account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Start generating the email",
+        "options": {
+          "systemMessage": "=You are a professional gaming journalist and newsletter writer.\n\nYour task is to write a short, engaging email-style gaming news newsletter\nbased ONLY on the scraped data provided below.\n\nCRITICAL RULES:\n- Do NOT invent, assume, or add any information that is not explicitly present in the data.\n- Do NOT speculate or exaggerate.\n- If information is missing, simply omit it.\n- Stay fully grounded in the provided content.\n\nSTYLE & TONE:\n- Energetic, exciting, and reader-focused (gaming audience).\n- Clear, concise, and fun to read.\n- Professional but not corporate.\n- No emojis unless they clearly fit the gaming tone (optional).\n\nSTRUCTURE:\n1. **Hook (2–3 lines max)**\n   - Start with a strong, curiosity-driven opening that makes the reader want to continue.\n   - Highlight the most exciting or impactful news from the data.\n\n2. **Main News Sections**\n   - Summarize each major news item from the scraped data.\n   - Use short paragraphs or bullet points.\n   - Keep facts accurate and faithful to the source.\n   - Prioritize clarity over length.\n\n3. **Closing Line**\n   - A short, engaging wrap-up that feels natural for a newsletter.\n   - No call-to-action unless explicitly supported by the data.\n\nOUTPUT CONSTRAINTS:\n- Write in newsletter email format (not a blog post).\n- Do not mention “scraped data”, “sources”, or the instructions.\n- Do not add dates, numbers, or claims unless present in the input.\n\nSCRAPED GAMING DATA:\n\n {{ $json.solution.response }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "d58aaa57-5c8c-4e2d-81b8-4d92631829cb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        456,
+        224
+      ],
+      "id": "67f337e4-78b8-4f07-ab9f-a68c201a82d8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "zFayhAArrx3wrEUL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "1",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        584,
+        224
+      ],
+      "id": "8bea11b4-3927-41ac-93b4-590f71c519ec",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sendTo": "ghassen.bennacer@outlook.com",
+        "subject": "Gaming News !!",
+        "emailType": "text",
+        "message": "={{ $('AI Agent').item.json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "a0fd63a6-f208-4e33-bb22-8f7ce84068a6",
+      "name": "Send a message",
+      "webhookId": "dcf4e948-4752-4ade-b8ae-b2adedb2b9f8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "MUZiixSfSIZDlDw6",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "scrappey",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "scrappey": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "6ad6a0bb-e54e-4e84-8ddf-fd3a6ad665a7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc1897c32e95664e0cd5c8c1d24ebf7f8ed420c2d790fd60adf9719c027b4a96"
+  },
+  "id": "dGvZLpybp7Dkj_WhTPqdu",
+  "tags": []
+}
